@@ -21,9 +21,10 @@
 #ifndef __DFU_H__
 #define __DFU_H__
 
-#include <usb.h>
+#include <libusb.h>
 #include "usb_dfu.h"
 
+#define VERSION "0.10"
 /* DFU states */
 #define STATE_APP_IDLE                  0x00
 #define STATE_APP_DETACH                0x01
@@ -74,27 +75,27 @@ struct dfu_status {
 
 void dfu_init( const int timeout );
 void dfu_debug( const int level );
-int dfu_detach( struct usb_dev_handle *device,
+int dfu_detach( struct libusb_device_handle *device,
                 const unsigned short interface,
                 const unsigned short timeout );
-int dfu_download( struct usb_dev_handle *device,
+int dfu_download( struct libusb_device_handle *device,
                   const unsigned short interface,
                   const unsigned short length,
                   char* data,
                   unsigned short transaction );
-int dfu_upload( struct usb_dev_handle *device,
+int dfu_upload( struct libusb_device_handle *device,
                 const unsigned short interface,
                 const unsigned short length,
                 char* data,
                 unsigned short transaction );
-int dfu_get_status( struct usb_dev_handle *device,
+int dfu_get_status( struct libusb_device_handle *device,
                     const unsigned short interface,
                     struct dfu_status *status );
-int dfu_clear_status( struct usb_dev_handle *device,
+int dfu_clear_status( struct libusb_device_handle *device,
                       const unsigned short interface );
-int dfu_get_state( struct usb_dev_handle *device,
+int dfu_get_state( struct libusb_device_handle *device,
                    const unsigned short interface );
-int dfu_abort( struct usb_dev_handle *device,
+int dfu_abort( struct libusb_device_handle *device,
                const unsigned short interface );
 
 char* dfu_state_to_string( int state );

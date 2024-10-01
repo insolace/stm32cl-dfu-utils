@@ -29,9 +29,9 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <string.h>
-#include <usb.h>
+#include <libusb.h>
 
-#include "config.h"
+//#include "config.h"
 #include "dfu.h"
 #include "usb_dfu.h"
 #include "dfu_load.h"
@@ -44,7 +44,7 @@
 
 unsigned short transaction = 0;
 
-int dfuload_do_upload(struct usb_dev_handle *usb_handle, int interface,
+int dfuload_do_upload(struct libusb_device_handle *usb_handle, int interface,
 		      int xfer_size, const char *fname)
 {
 	int ret, fd, total_bytes = 0;
@@ -103,7 +103,7 @@ out_free:
 
 #define PROGRESS_BAR_WIDTH 50
 
-int dfuload_do_dnload(struct usb_dev_handle *usb_handle, int interface,
+int dfuload_do_dnload(struct libusb_device_handle *usb_handle, int interface,
 		      int xfer_size, const char *fname)
 {
 	int ret, fd, bytes_sent = 0;

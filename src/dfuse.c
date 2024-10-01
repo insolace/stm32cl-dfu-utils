@@ -13,9 +13,9 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <string.h>
-#include <usb.h>
+#include <libusb.h>
 
-#include "config.h"
+//#include "config.h"
 #include "dfu.h"
 #include "usb_dfu.h"
 #include "dfuse.h"
@@ -42,7 +42,7 @@ void dfuse_init()
 }
 
 /* Either set address pointer or erase page at given address */
-int dfuse_set_address_pointer(struct usb_dev_handle *usb_handle, int interface,
+int dfuse_set_address_pointer(struct libusb_device_handle *usb_handle, int interface,
 		      unsigned int address, int command)
 {
     char buf[5];
@@ -112,7 +112,7 @@ int dfuse_set_address_pointer(struct usb_dev_handle *usb_handle, int interface,
     return ret;
 }
 
-int dfuse_do_upload(struct usb_dev_handle *usb_handle, int interface,
+int dfuse_do_upload(struct libusb_device_handle *usb_handle, int interface,
 		      int xfer_size, const char *fname)
 {
 	int ret, fd, total_bytes = 0;
@@ -173,7 +173,7 @@ out_free:
 
 #define PROGRESS_BAR_WIDTH 50
 
-int dfuse_dnload_chunk(struct usb_dev_handle *usb_handle, int interface,
+int dfuse_dnload_chunk(struct libusb_device_handle *usb_handle, int interface,
 			char *data, int size, int transaction)
 {
 	int bytes_sent;
@@ -210,7 +210,7 @@ int dfuse_dnload_chunk(struct usb_dev_handle *usb_handle, int interface,
 
 /* This is not working yet! */
 /* Download non-DfuSe file to DfuSe device at requested address */
-int dfuse_do_raw_dnload(struct usb_dev_handle *usb_handle, int interface,
+int dfuse_do_raw_dnload(struct libusb_device_handle *usb_handle, int interface,
 		      int xfer_size, const char *fname, int address)
 {
 	int ret, fd, bytes_sent = 0;
@@ -327,7 +327,7 @@ out_free:
 
 /* This is a quick and dirty rip from dfuse_do_dfuse_dnload */
 /* Download raw binary file to DfuSe device */
-int dfuse_do_bin_dnload(struct usb_dev_handle *usb_handle, int interface,
+int dfuse_do_bin_dnload(struct libusb_device_handle *usb_handle, int interface,
 		      int xfer_size, const char *fname, int start_address)
 {
     int dwElementAddress;
@@ -445,7 +445,7 @@ out_close:
 }
 
 /* Parse a DfuSe file and download contents to device */
-int dfuse_do_dfuse_dnload(struct usb_dev_handle *usb_handle, int interface,
+int dfuse_do_dfuse_dnload(struct libusb_device_handle *usb_handle, int interface,
 		      int xfer_size, const char *fname)
 {
     char dfuprefix[11];
@@ -492,7 +492,7 @@ int dfuse_do_dfuse_dnload(struct usb_dev_handle *usb_handle, int interface,
 
     ret = read(fd, dfuprefix, sizeof(dfuprefix));
     read_bytes = ret;
-    if (ret < sizeof(dfuprefix)) {
+    if ((unsigned long)ret < sizeof(dfuprefix)) {
 	fprintf(stderr, "Could not read DfuSe header\n");
 	goto out_close;
     }
@@ -511,7 +511,7 @@ int dfuse_do_dfuse_dnload(struct usb_dev_handle *usb_handle, int interface,
 	printf("parsing DFU image %i\n", image);
 	ret = read(fd, targetprefix, sizeof(targetprefix));
         read_bytes += ret;
-	if (ret < sizeof(targetprefix)) {
+    if ((unsigned long)ret < sizeof(targetprefix)) {
 	    fprintf(stderr, "Could not read DFU header\n");
 	    goto out_close;
 	}
@@ -528,7 +528,7 @@ int dfuse_do_dfuse_dnload(struct usb_dev_handle *usb_handle, int interface,
 	    printf("parsing element %i, ", element);
 	    ret = read(fd, elementheader, sizeof(elementheader));
 	    read_bytes += ret;
-	    if (ret < sizeof(elementheader)) {
+        if ((unsigned long)ret < sizeof(elementheader)) {
 		fprintf(stderr, "Could not read element header\n");
 		goto out_close;
 	    }
@@ -537,7 +537,7 @@ int dfuse_do_dfuse_dnload(struct usb_dev_handle *usb_handle, int interface,
 	    printf("address = 0x%08x, ", dwElementAddress);
 	    printf("size = %i\n", dwElementSize);
 	    /* sanity check */
-	    if (read_bytes + dwElementSize + sizeof(dfusuffix) > st.st_size) {
+        if ((unsigned long)read_bytes + (unsigned long)dwElementSize + sizeof(dfusuffix) > (unsigned long)st.st_size) {
 		fprintf(stderr, "File too small for element size\n");
 		goto out_close;
 	    }
@@ -618,7 +618,7 @@ int dfuse_do_dfuse_dnload(struct usb_dev_handle *usb_handle, int interface,
     /* and share it with the standard DFU code */
     ret = read(fd, dfusuffix, sizeof(dfusuffix));
     read_bytes += ret;
-    if (ret < sizeof(dfusuffix)) {
+    if ((unsigned long)ret < sizeof(dfusuffix)) {
 	fprintf(stderr, "Could not read DFU suffix\n");
 	ret = -EINVAL;
 	goto out_close;
